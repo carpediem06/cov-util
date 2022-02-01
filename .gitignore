@@ -1,0 +1,7 @@
+*.gcda
+*.gcno
+*.c.gcov
+rapport.info
+covreport
+test
+
