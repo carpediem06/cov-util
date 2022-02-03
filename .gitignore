@@ -4,4 +4,10 @@
 rapport.info
 covreport
 test
+callgrind.out.*
+*.out
+*.svg
+*.gprof
+tmp
+*.data
 

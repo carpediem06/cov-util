@@ -1,8 +1,9 @@
 #include <stdio.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/time.h>
-#include <sys/resource.h>
+#include <string.h>
+
+#include "useful.h"
 
 #ifdef CUNIT_TEST
     #include <curses.h>
@@ -15,9 +16,6 @@
 #define TEST(text) (printf("*** TEST: %s ***\n", text))
 
 void testcase_1();
-char *bin2hex(unsigned char *p, int len);
-unsigned char *hex2bin(const char *str);
-
 
 
 #ifdef CUNIT_TEST
@@ -51,11 +49,11 @@ void AddTests(void)
 }
 #endif //CUNIT_TEST
 
-int main(int argc, char *argv[])
+int main()
 {
 #ifdef __COVERAGESCANNER__
     int ret = 0;
-    
+
     __coveragescanner_install("test_1");
     __coveragescanner_clear();
     __coveragescanner_testname("CU_1");
@@ -91,13 +89,12 @@ int main(int argc, char *argv[])
 void testcase_1()
 {
    unsigned char s[] = {  0x31, 0xa0, 0xf9, 0x44, 0x65, 0x61, 0x64, 0xFF, 0xFF };
-   char hex1[] = { " " };
-   char hex2[] = { '\0' };
-   char hex3[] = { "deadbeff000" };
-   char *hex;
+   unsigned char hex1[] = { " " };
+   unsigned char hex2[] = { '\0' };
+   unsigned char hex3[] = { "deadbeff000" };
+   unsigned char *hex;
    unsigned char *bin;
-   size_t k;
-   int len;
+   size_t k, len;
    
    TEST("bin2hex");
    hex = bin2hex(s, sizeof s);
@@ -108,11 +105,11 @@ void testcase_1()
    hex2bin(hex1);
    hex2bin(hex2);
    hex2bin(hex3);
-   bin = hex2bin(hex);
+   bin = hex2bin((unsigned char *)hex);
    printf("bin=%s\n", bin);
 
    TEST("bin2hex");
-   len = strlen(s) / 2 - 1;
+   len = strlen((char *)s) / 2 - 1;
    bin2hex(bin, len);
    for(k=0; k < len; k++)
         printf("%02X ", bin[k]);
@@ -120,80 +117,6 @@ void testcase_1()
     printf("\n");
 }
 
-
-
-char *bin2hex(unsigned char *p, int len)
-{
-    char *hex = malloc(((2*len) + 1));
-    char *r = hex;
-
-    while(len && p)
-    {
-        (*r) = ((*p) & 0xF0) >> 4;
-        (*r) = ((*r) <= 9 ? '0' + (*r) : 'A' - 10 + (*r));
-        r++;
-        (*r) = ((*p) & 0x0F);
-        (*r) = ((*r) <= 9 ? '0' + (*r) : 'A' - 10 + (*r));
-        r++;
-        p++;
-        len--;
-    }
-    *r = '\0';
-
-    return hex;
-}
-
-unsigned char *hex2bin(const char *str)
-{
-    int len, h;
-    unsigned char *result, *err, *p, c;
-
-    err = malloc(1);
-    *err = 0;
-
-    if (!str)
-        return err;
-
-    if (!*str)
-        return err;
-
-    len = 0;
-    p = (unsigned char*) str;
-    while (*p++)
-        len++;
-
-    result = malloc((len/2)+1);
-    h = !(len%2) * 4;
-    p = result;
-    *p = 0;
-
-    c = *str;
-    while(c)
-    {
-        if(('0' <= c) && (c <= '9'))
-            *p += (c - '0') << h;
-        else if(('A' <= c) && (c <= 'F'))
-            *p += (c - 'A' + 10) << h;
-        else if(('a' <= c) && (c <= 'f'))
-            *p += (c - 'a' + 10) << h;
-        else
-            return err;
-
-        str++;
-        c = *str;
-
-        if (h)
-            h = 0;
-        else
-        {
-            h = 4;
-            p++;
-            *p = 0;
-        }
-    }
-
-    return result;
-}
 
 
 
